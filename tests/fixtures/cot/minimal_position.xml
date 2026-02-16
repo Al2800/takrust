@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<event version="2.0"
+       uid="fixture-uas-001"
+       type="a-f-G-U-C"
+       how="m-g"
+       time="2026-02-16T00:00:00Z"
+       start="2026-02-16T00:00:00Z"
+       stale="2026-02-16T00:05:00Z">
+  <point lat="34.052235" lon="-118.243683" hae="120.0" ce="8.0" le="4.0"/>
+  <detail>
+    <contact callsign="fixture-uas-001"/>
+    <track course="90.0" speed="18.0"/>
+  </detail>
+</event>

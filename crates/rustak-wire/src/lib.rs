@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use rustak_limits::{Limits, LimitsError};
+use rustak_proto::ProtoError;
 use thiserror::Error;
 
 pub mod framing;
@@ -22,6 +23,34 @@ pub enum WireFormat {
 pub enum DowngradePolicy {
     FailOpen,
     FailClosed,
+}
+
+pub fn encode_payload_for_format(
+    payload: &[u8],
+    format: WireFormat,
+) -> Result<Vec<u8>, WirePayloadError> {
+    if payload.is_empty() {
+        return Err(WirePayloadError::EmptyPayload);
+    }
+
+    match format {
+        WireFormat::Xml => Ok(payload.to_vec()),
+        WireFormat::TakProtocolV1 => rustak_proto::encode_v1_payload(payload).map_err(Into::into),
+    }
+}
+
+pub fn decode_payload_for_format(
+    payload: &[u8],
+    format: WireFormat,
+) -> Result<Vec<u8>, WirePayloadError> {
+    if payload.is_empty() {
+        return Err(WirePayloadError::EmptyPayload);
+    }
+
+    match format {
+        WireFormat::Xml => Ok(payload.to_vec()),
+        WireFormat::TakProtocolV1 => rustak_proto::decode_v1_payload(payload).map_err(Into::into),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -97,6 +126,15 @@ pub enum WireConfigError {
     },
 }
 
+#[derive(Debug, Error)]
+pub enum WirePayloadError {
+    #[error(transparent)]
+    Proto(#[from] ProtoError),
+
+    #[error("payload must not be empty")]
+    EmptyPayload,
+}
+
 fn ensure_non_zero_duration(field: &'static str, value: Duration) -> Result<(), WireConfigError> {
     if value.is_zero() {
         return Err(WireConfigError::ZeroDuration { field });
@@ -132,7 +170,10 @@ fn word_at(data: &[u8], offset: usize) -> usize {
 mod tests {
     use std::time::Duration;
 
-    use crate::{WireConfig, WireConfigError};
+    use crate::{
+        decode_payload_for_format, encode_payload_for_format, WireConfig, WireConfigError,
+        WireFormat, WirePayloadError,
+    };
 
     #[test]
     fn defaults_validate() {
@@ -181,5 +222,33 @@ mod tests {
         for sample in corpus {
             let _ = super::fuzz_hook_validate_wire_config(sample);
         }
+    }
+
+    #[test]
+    fn xml_payload_path_is_passthrough() {
+        let payload = b"<event uid=\"xml\"/>".to_vec();
+        let encoded = encode_payload_for_format(&payload, WireFormat::Xml).expect("encode");
+        let decoded = decode_payload_for_format(&encoded, WireFormat::Xml).expect("decode");
+        assert_eq!(decoded, payload);
+    }
+
+    #[test]
+    fn tak_v1_payload_routes_through_proto_codec() {
+        let payload = b"<event uid=\"tak-v1\"/>".to_vec();
+        let encoded =
+            encode_payload_for_format(&payload, WireFormat::TakProtocolV1).expect("encode");
+        let decoded =
+            decode_payload_for_format(&encoded, WireFormat::TakProtocolV1).expect("decode");
+        assert_eq!(decoded, payload);
+    }
+
+    #[test]
+    fn empty_payload_is_rejected_for_all_formats() {
+        let xml_error = encode_payload_for_format(&[], WireFormat::Xml).expect_err("xml empty");
+        assert!(matches!(xml_error, WirePayloadError::EmptyPayload));
+
+        let tak_error =
+            decode_payload_for_format(&[], WireFormat::TakProtocolV1).expect_err("tak empty");
+        assert!(matches!(tak_error, WirePayloadError::EmptyPayload));
     }
 }

@@ -1,0 +1,10 @@
+[package]
+name = "rustak-geo"
+version = "0.1.0"
+edition = "2021"
+description = "Pure-Rust geodesy helpers for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-core = { path = "../rustak-core" }
+thiserror = "2.0"

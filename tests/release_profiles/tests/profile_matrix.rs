@@ -8,6 +8,7 @@ use toml::Value;
 fn profile_matrix_tak_only_is_consistent() {
     let root_manifest = load_root_manifest();
     let tak_only = release_profile(&root_manifest, "tak_only");
+    let workspace_members = workspace_members(&root_manifest);
 
     let included = profile_list(tak_only, "included_crates");
     let forbidden = profile_list(tak_only, "forbidden_crates");
@@ -31,12 +32,14 @@ fn profile_matrix_tak_only_is_consistent() {
     assert_no_duplicate_entries(&forbidden);
     assert_no_profile_overlap(&included, &forbidden);
     assert_crate_manifests_exist(&included);
+    assert_crates_are_workspace_members(&included, &workspace_members);
 }
 
 #[test]
 fn profile_matrix_tak_sapient_includes_bridge_components() {
     let root_manifest = load_root_manifest();
     let tak_sapient = release_profile(&root_manifest, "tak_sapient");
+    let workspace_members = workspace_members(&root_manifest);
 
     let included = profile_list(tak_sapient, "included_crates");
     let forbidden = profile_list(tak_sapient, "forbidden_crates");
@@ -60,6 +63,7 @@ fn profile_matrix_tak_sapient_includes_bridge_components() {
     assert_no_duplicate_entries(&included);
     assert_no_duplicate_entries(&commands);
     assert_crate_manifests_exist(&included);
+    assert_crates_are_workspace_members(&included, &workspace_members);
 }
 
 #[test]
@@ -94,6 +98,17 @@ fn conformance_doc_mentions_both_profiles() {
     }
 }
 
+#[test]
+fn workspace_members_are_resolvable_and_include_release_matrix() {
+    let root_manifest = load_root_manifest();
+    let members = workspace_members(&root_manifest);
+
+    assert_contains(&members, "xtask");
+    assert_contains(&members, "tests/release_profiles");
+    assert_no_duplicate_entries(&members);
+    assert_workspace_members_exist(&members);
+}
+
 fn repo_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("..")
@@ -125,6 +140,18 @@ fn release_profile<'a>(
         .and_then(|profiles| profiles.get(profile_name))
         .and_then(Value::as_table)
         .unwrap_or_else(|| panic!("missing workspace.metadata.release_profiles.{profile_name}"))
+}
+
+fn workspace_members(manifest: &Value) -> Vec<String> {
+    manifest
+        .get("workspace")
+        .and_then(Value::as_table)
+        .and_then(|workspace| workspace.get("members"))
+        .and_then(Value::as_array)
+        .unwrap_or_else(|| panic!("missing workspace.members"))
+        .iter()
+        .map(|entry| entry.as_str().unwrap_or_default().to_owned())
+        .collect()
 }
 
 fn profile_list(profile: &toml::map::Map<String, Value>, key: &str) -> Vec<String> {
@@ -179,6 +206,29 @@ fn assert_crate_manifests_exist(crates: &[String]) {
         assert!(
             manifest.exists(),
             "crate manifest missing for profile entry `{crate_name}` at {}",
+            manifest.display()
+        );
+    }
+}
+
+fn assert_crates_are_workspace_members(crates: &[String], workspace_members: &[String]) {
+    for crate_name in crates {
+        let expected_member = format!("crates/{crate_name}");
+        assert!(
+            workspace_members
+                .iter()
+                .any(|member| member == &expected_member),
+            "release-profile crate `{crate_name}` must appear in workspace.members as `{expected_member}`; members={workspace_members:?}"
+        );
+    }
+}
+
+fn assert_workspace_members_exist(workspace_members: &[String]) {
+    for member in workspace_members {
+        let manifest = repo_root().join(member).join("Cargo.toml");
+        assert!(
+            manifest.exists(),
+            "workspace member `{member}` is missing Cargo.toml at {}",
             manifest.display()
         );
     }

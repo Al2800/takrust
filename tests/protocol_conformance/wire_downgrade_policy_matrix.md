@@ -14,3 +14,8 @@ Automated assertions for this matrix live in:
 
 - `crates/rustak-wire/tests/downgrade_policy_matrix.rs`
 - `crates/rustak-wire/src/negotiation.rs` unit tests
+
+Protocol payload conformance assertions (XML passthrough vs TAK v1 proto payload path) live in:
+
+- `tests/protocol_conformance/fixtures/proto_v1_cot_message.xml`
+- `crates/rustak-wire/tests/proto_payload_matrix.rs`

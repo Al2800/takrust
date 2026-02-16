@@ -8,5 +8,3 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 rustak-limits = { path = "../rustak-limits" }
 thiserror = "2.0"
-
-[workspace]

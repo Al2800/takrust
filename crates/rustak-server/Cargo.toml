@@ -1,0 +1,12 @@
+[package]
+name = "rustak-server"
+version = "0.1.0"
+edition = "2021"
+description = "TAK Server streaming client contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-crypto = { path = "../rustak-crypto" }
+rustak-transport = { path = "../rustak-transport" }
+rustak-wire = { path = "../rustak-wire" }
+thiserror = "2.0"

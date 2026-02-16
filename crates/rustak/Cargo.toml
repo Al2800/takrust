@@ -1,0 +1,19 @@
+[package]
+name = "rustak"
+version = "0.1.0"
+edition = "2021"
+description = "Facade crate with unified public API and error surface for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-admin = { path = "../rustak-admin" }
+rustak-bridge = { path = "../rustak-bridge" }
+rustak-config = { path = "../rustak-config" }
+rustak-core = { path = "../rustak-core" }
+rustak-io = { path = "../rustak-io" }
+rustak-limits = { path = "../rustak-limits" }
+rustak-record = { path = "../rustak-record" }
+rustak-sapient = { path = "../rustak-sapient" }
+rustak-transport = { path = "../rustak-transport" }
+rustak-wire = { path = "../rustak-wire" }
+thiserror = "2.0"

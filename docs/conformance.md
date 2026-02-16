@@ -8,6 +8,10 @@ Related guides:
 - `docs/quickstart_tak_only.md`
 - `docs/quickstart_bridge.md`
 
+Shared scaffold references:
+- `tests/fixtures/README.md`
+- `tests/integration/README.md`
+
 ## Profiles
 
 ### `tak_only`
@@ -69,3 +73,18 @@ If a crate is added to the workspace architecture, update all three:
 - root profile metadata,
 - this conformance matrix,
 - profile matrix tests.
+
+## Fixture and Integration Scaffolding
+
+Current repository scaffolding for architecture-aligned test growth:
+
+- Shared fixture root: `tests/fixtures/`
+  - CoT seed payloads: `tests/fixtures/cot/`
+  - Certificate fixture templates: `tests/fixtures/certs/`
+  - Deterministic scenario seeds: `tests/fixtures/scenarios/`
+- Integration execution contract: `tests/integration/README.md`
+- Interop harness implementation path: `tests/interop_harness/`
+
+As new conformance suites are added, keep fixture sources centralized under
+`tests/fixtures/**` and document each integration entrypoint under
+`tests/integration/**`.

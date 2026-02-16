@@ -11,5 +11,3 @@ chrono = ["dep:chrono"]
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["std"], optional = true }
-
-[workspace]

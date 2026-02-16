@@ -1,0 +1,9 @@
+[package]
+name = "rustak-crypto"
+version = "0.1.0"
+edition = "2021"
+description = "Certificate loading and provider-mode contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+thiserror = "2.0"

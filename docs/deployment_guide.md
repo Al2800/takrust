@@ -42,6 +42,31 @@ When enabling admin endpoints:
 - Treat reload capability as privileged control plane access.
 - Keep non-loopback bind opt-in and audited per environment.
 
+## Crypto Provider and Certificate Store Contracts
+
+`rustak-crypto` provides the baseline certificate loading and provider-selection
+contracts used by secure transport surfaces.
+
+- Provider modes:
+  - `Ring`
+  - `AwsLcRs`
+  - `AwsLcRsFips` (requires explicit runtime FIPS support)
+- Identity source contracts:
+  - `PemFiles` (`ca_cert_path`, `client_cert_path`, `client_key_path`)
+  - `Pkcs12File` (`archive_path`, optional password)
+
+Validation command:
+
+```bash
+cargo test --manifest-path crates/rustak-crypto/Cargo.toml
+```
+
+## Related References
+
+- `docs/tak_server_api.md` for TAK Server integration boundaries.
+- `docs/tak_sapient_mapping.md` for bridge mapping/correlation policy.
+- `docs/security_audit.md` for release-blocking audit checklist.
+
 ## Bridge RC Checklist (Deterministic Replay Gate)
 
 Before promoting a bridge-enabled release candidate, run and record all checks below:

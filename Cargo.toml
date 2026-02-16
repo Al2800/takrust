@@ -1,6 +1,27 @@
 [workspace]
-members = ["xtask"]
-default-members = ["xtask"]
+members = [
+  "xtask",
+  "crates/rustak-admin",
+  "crates/rustak",
+  "crates/rustak-bridge",
+  "crates/rustak-crypto",
+  "crates/rustak-config",
+  "crates/rustak-core",
+  "crates/rustak-cot",
+  "crates/rustak-io",
+  "crates/rustak-limits",
+  "crates/rustak-net",
+  "crates/rustak-geo",
+  "crates/rustak-proto",
+  "crates/rustak-record",
+  "crates/rustak-sapient",
+  "crates/rustak-server",
+  "crates/rustak-sim",
+  "crates/rustak-transport",
+  "crates/rustak-wire",
+  "tests/release_profiles",
+]
+default-members = ["xtask", "tests/release_profiles"]
 resolver = "2"
 
 [workspace.package]

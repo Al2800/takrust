@@ -19,6 +19,20 @@ Use the profile-specific quickstarts:
 These guides map directly to `workspace.metadata.release_profiles` in root `Cargo.toml`
 and the profile matrix tests under `tests/release_profiles/tests/profile_matrix.rs`.
 
+## Reference Docs
+
+- CoT type baseline: `docs/cot_type_reference.md`
+- TAK Server integration notes: `docs/tak_server_api.md`
+- SAPIENT framing/version notes: `docs/sapient_reference.md`
+- TAK↔SAPIENT mapping policy: `docs/tak_sapient_mapping.md`
+- Security audit checklist: `docs/security_audit.md`
+
+## Governance
+
+- Security policy: `SECURITY.md`
+- Contribution guide: `CONTRIBUTING.md`
+- Community conduct: `CODE_OF_CONDUCT.md`
+
 ## `xtask` automation commands
 
 This repository uses an `xtask` binary crate for consistent local/CI orchestration.

@@ -1,0 +1,10 @@
+[package]
+name = "rustak-proto"
+version = "0.1.0"
+edition = "2021"
+description = "TAK Protocol v1 payload codec contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+prost = "0.13"
+thiserror = "2.0"

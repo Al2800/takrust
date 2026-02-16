@@ -1,0 +1,26 @@
+# RusTAK Integration Test Contract
+
+This directory defines integration-test execution contracts that require
+external services (for example TAK Server or dockerized interoperability
+harnesses).
+
+## Execution Paths
+
+- **Local deterministic smoke path**
+  - `cargo test --manifest-path tests/interop_harness/Cargo.toml`
+  - `cargo test --manifest-path crates/rustak-server/Cargo.toml`
+  - Uses repository fixtures and must run without external credentials.
+- **CI baseline path**
+  - `cargo test --manifest-path tests/release_profiles/Cargo.toml`
+  - `cargo test --manifest-path tests/interop_harness/Cargo.toml`
+  - `cargo test --manifest-path crates/rustak-server/Cargo.toml`
+- **Extended environment-dependent path**
+  - Reserved for TAK Server/docker orchestration flows that need networked
+    dependencies and explicit environment setup.
+
+## Authoring Rules
+
+- Keep fixtures under `tests/fixtures/**` and reference by relative path.
+- Add new integration suites under this directory with a short README that
+  states prerequisites, command, and expected pass signal.
+- Mark environment-dependent tests as opt-in so baseline CI remains stable.

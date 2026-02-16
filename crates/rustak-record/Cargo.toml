@@ -11,5 +11,3 @@ crc32fast = "1.4"
 rustak-io = { path = "../rustak-io" }
 sha2 = "0.10"
 thiserror = "2.0"
-
-[workspace]

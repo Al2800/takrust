@@ -1,0 +1,32 @@
+[
+  {
+    "stream_id": "tak",
+    "sequence": 1,
+    "timestamp_nanos": 1700000000000001000,
+    "uid": "fixture-uas-001",
+    "cot_type": "a-f-G-U-C",
+    "classification": "friendly",
+    "behavior": "patrol",
+    "confidence": 0.95
+  },
+  {
+    "stream_id": "sapient",
+    "sequence": 1,
+    "timestamp_nanos": 1700000000000001300,
+    "uid": "fixture-track-101",
+    "cot_type": "a-n-A-C-F",
+    "classification": "unknown",
+    "behavior": "approach",
+    "confidence": 0.67
+  },
+  {
+    "stream_id": "tak",
+    "sequence": 2,
+    "timestamp_nanos": 1700000000000002000,
+    "uid": "fixture-uas-001",
+    "cot_type": "a-f-G-U-C",
+    "classification": "friendly",
+    "behavior": "turn",
+    "confidence": 0.91
+  }
+]
