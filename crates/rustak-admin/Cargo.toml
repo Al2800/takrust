@@ -1,0 +1,15 @@
+[package]
+name = "rustak-admin"
+version = "0.1.0"
+edition = "2021"
+description = "Optional admin endpoint configuration and handlers for RusTAK services"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+thiserror = "2.0"
+
+[features]
+default = []
+admin-server = []
+
+[workspace]

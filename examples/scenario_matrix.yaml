@@ -1,0 +1,83 @@
+version: 1
+bead: bd-2vq.11.2.1
+description: >
+  Minimal-but-complete scenario/transport matrix for TAK-only and bridge-relevant
+  workflows, with deterministic recovery-oriented checks.
+
+scenarios:
+  - id: tak_only_send_xml
+    profile: tak_only
+    workflow: send
+    command: cargo test --manifest-path crates/rustak-transport/Cargo.toml sender_receiver_round_trip_xml_delimited_framing
+    expected_signal: xml-delimited sender/receiver round-trip passes
+    failure_signal: framing mismatch or stream decode failure
+    recovery:
+      - rerun tak_only profile gate
+      - verify xml framing configuration defaults in rustak-transport
+    recovery_command: cargo test --manifest-path tests/release_profiles/Cargo.toml -- --exact profile_matrix_tak_only_is_consistent
+
+  - id: tak_only_listen_takv1
+    profile: tak_only
+    workflow: listen
+    command: cargo test --manifest-path crates/rustak-transport/Cargo.toml sender_receiver_round_trip_tak_length_prefixed_framing
+    expected_signal: tak-v1 length-prefixed receiver path passes
+    failure_signal: frame length decode error or protocol mismatch
+    recovery:
+      - verify tak framing selection and max_frame_bytes assumptions
+      - revalidate transport framing tests after config adjustments
+    recovery_command: cargo test --manifest-path crates/rustak-transport/Cargo.toml sender_receiver_round_trip_tak_length_prefixed_framing
+
+  - id: tak_only_replay_recovery
+    profile: tak_only
+    workflow: replay
+    command: cargo test --manifest-path crates/rustak-record/Cargo.toml recovery_
+    expected_signal: recovery_* tests pass for crash-safe replay semantics
+    failure_signal: chunk index rebuild or checksum mismatch regressions
+    recovery:
+      - inspect record chunk CRC and commit marker behavior
+      - rerun recovery_* after fixture or writer adjustments
+    recovery_command: cargo test --manifest-path crates/rustak-record/Cargo.toml recovery_
+
+  - id: bridge_profile_gate
+    profile: tak_sapient
+    workflow: bridge
+    command: cargo test --manifest-path tests/release_profiles/Cargo.toml -- --exact profile_matrix_tak_sapient_includes_bridge_components
+    expected_signal: bridge/sapient/config components are included in profile matrix
+    failure_signal: required bridge profile components missing
+    recovery:
+      - align release profile metadata with crate inclusion expectations
+      - rerun profile matrix gate after metadata sync
+    recovery_command: cargo test --manifest-path tests/release_profiles/Cargo.toml -- --exact profile_matrix_tak_sapient_includes_bridge_components
+
+  - id: bridge_replay_determinism
+    profile: tak_sapient
+    workflow: replay
+    command: cargo test --manifest-path crates/rustak-bridge/Cargo.toml replay_sequence_decisions_are_deterministic
+    expected_signal: replay/reconnect dedup + correlation decisions remain stable
+    failure_signal: replay ordering mutates deterministic decision vector
+    recovery:
+      - inspect bridge dedup window and correlator consistency
+      - verify reconnect replay ordering invariants
+    recovery_command: cargo test --manifest-path crates/rustak-bridge/Cargo.toml replay_sequence_decisions_are_deterministic
+
+  - id: bridge_strict_mapping_failure_path
+    profile: tak_sapient
+    workflow: failure-recovery
+    command: cargo test --manifest-path crates/rustak-bridge/Cargo.toml strict_mapping_validation_rejects_incomplete_tables
+    expected_signal: strict startup rejects incomplete mapping tables
+    failure_signal: invalid mappings accepted under strict mode
+    recovery:
+      - restore complete class_to_cot and behaviour mappings
+      - rerun strict startup mapping checks
+    recovery_command: cargo test --manifest-path crates/rustak-bridge/Cargo.toml strict_startup_requires_mapping_coverage
+
+  - id: wire_malformed_control_recovery_paths
+    profile: tak_sapient
+    workflow: failure-recovery
+    command: cargo test --manifest-path crates/rustak-wire/Cargo.toml malformed_control_fixtures_remain_fail_closed_terminated
+    expected_signal: malformed negotiation control frame terminates in fail-closed mode
+    failure_signal: malformed control frame bypasses policy path
+    recovery:
+      - verify negotiation policy fallback behavior with fail-open mode
+      - confirm malformed fixture handling stays explicit
+    recovery_command: cargo test --manifest-path crates/rustak-wire/Cargo.toml malformed_control_fixtures_remain_fail_open_fallback
