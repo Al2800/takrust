@@ -116,8 +116,71 @@ pub fn handle_diagnostics<S: AdminState>(state: &S) -> AdminResponse {
 }
 
 fn escape_json_string(value: &str) -> String {
-    value
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"")
-        .replace('\n', "\\n")
+    let mut escaped = String::with_capacity(value.len());
+
+    for character in value.chars() {
+        match character {
+            '"' => escaped.push_str("\\\""),
+            '\\' => escaped.push_str("\\\\"),
+            '\u{08}' => escaped.push_str("\\b"),
+            '\u{0C}' => escaped.push_str("\\f"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => escaped.push_str("\\r"),
+            '\t' => escaped.push_str("\\t"),
+            control if control <= '\u{1F}' => {
+                escaped.push_str("\\u");
+                let value = control as u32;
+                escaped.push(char::from_digit((value >> 12) & 0xF, 16).unwrap_or('0'));
+                escaped.push(char::from_digit((value >> 8) & 0xF, 16).unwrap_or('0'));
+                escaped.push(char::from_digit((value >> 4) & 0xF, 16).unwrap_or('0'));
+                escaped.push(char::from_digit(value & 0xF, 16).unwrap_or('0'));
+            }
+            regular => escaped.push(regular),
+        }
+    }
+
+    escaped
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        handle_diagnostics, AdminState, DiagnosticLevel, DiagnosticsSnapshot, ReloadError,
+    };
+
+    struct DiagnosticsOnlyState;
+
+    impl AdminState for DiagnosticsOnlyState {
+        fn uptime_seconds(&self) -> u64 {
+            0
+        }
+
+        fn metrics_snapshot(&self) -> String {
+            String::new()
+        }
+
+        fn request_reload(&self) -> Result<(), ReloadError> {
+            Ok(())
+        }
+
+        fn diagnostics_snapshot(&self) -> DiagnosticsSnapshot {
+            DiagnosticsSnapshot {
+                transport: DiagnosticLevel::Warn,
+                negotiation: DiagnosticLevel::Error,
+                bridge: DiagnosticLevel::Ok,
+                notes: vec!["line1\nline2\t\"quoted\"\\slash\r".to_owned()],
+            }
+        }
+    }
+
+    #[test]
+    fn diagnostics_json_escapes_control_characters() {
+        let response = handle_diagnostics(&DiagnosticsOnlyState);
+        assert!(response.body.contains("\\n"));
+        assert!(response.body.contains("\\t"));
+        assert!(response.body.contains("\\\"quoted\\\""));
+        assert!(response.body.contains("\\\\slash"));
+        assert!(response.body.contains("\\r"));
+        assert!(!response.body.contains("line1\nline2\t"));
+    }
 }

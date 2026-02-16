@@ -32,4 +32,4 @@ cargo test --manifest-path crates/rustak-wire/Cargo.toml malformed_control_fixtu
 cargo test --manifest-path crates/rustak-wire/Cargo.toml malformed_control_fixtures_remain_fail_open_fallback
 ```
 
-For release-candidate signoff, pair this matrix with `bd-2vq.10.2.2` deterministic replay gate execution once its digest baseline is finalized.
+For release-candidate signoff, pair this matrix with the deterministic replay RC gate in `tests/interop_harness/tests/deterministic_replay_gate.rs`.
