@@ -85,7 +85,7 @@ pub fn fuzz_hook_validate_sapient_config(data: &[u8]) -> Result<(), SapientConfi
     config.limits.max_detail_elements = word_at(data, 10);
     config.read_timeout = Duration::from_millis(word_at(data, 12) as u64);
     config.write_timeout = Duration::from_millis(word_at(data, 14) as u64);
-    config.tcp_nodelay = byte_at(data, 16).is_multiple_of(2);
+    config.tcp_nodelay = byte_at(data, 16) % 2 == 0;
     config.validate()
 }
 

@@ -149,12 +149,7 @@ pub fn import_annotations_from_pcap<R: Read>(
     }
 
     let mut annotations = Vec::new();
-    loop {
-        let packet_header = match read_packet_header(&mut source)? {
-            Some(header) => header,
-            None => break,
-        };
-
+    while let Some(packet_header) = read_packet_header(&mut source)? {
         let ts_sec = u32::from_le_bytes([
             packet_header[0],
             packet_header[1],

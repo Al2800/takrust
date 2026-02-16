@@ -68,7 +68,11 @@ pub extern "C" fn rustak_ffi_current_abi_version() -> RustakFfiVersion {
 }
 
 #[no_mangle]
-pub extern "C" fn rustak_ffi_negotiate_abi_version(
+/// # Safety
+///
+/// `out_version` must be either null or a valid, writable pointer to a
+/// `RustakFfiVersion`.
+pub unsafe extern "C" fn rustak_ffi_negotiate_abi_version(
     requested_major: u16,
     out_version: *mut RustakFfiVersion,
 ) -> RustakFfiStatus {
@@ -77,9 +81,7 @@ pub extern "C" fn rustak_ffi_negotiate_abi_version(
     }
 
     let version = rustak_ffi_current_abi_version();
-    unsafe {
-        out_version.write(version);
-    }
+    unsafe { out_version.write(version) };
 
     if requested_major == version.major {
         RustakFfiStatus::Ok
@@ -111,12 +113,16 @@ pub extern "C" fn rustak_ffi_status_message(status_code: i32) -> *const c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn rustak_ffi_encode_tak_v1(
+/// # Safety
+///
+/// `input_ptr` must point to `input_len` readable bytes, and `out_buffer`
+/// must be a valid, writable pointer to a `RustakFfiBuffer`.
+pub unsafe extern "C" fn rustak_ffi_encode_tak_v1(
     input_ptr: *const u8,
     input_len: usize,
     out_buffer: *mut RustakFfiBuffer,
 ) -> RustakFfiStatus {
-    let input = match copy_input(input_ptr, input_len) {
+    let input = match unsafe { copy_input(input_ptr, input_len) } {
         Ok(input) => input,
         Err(status) => return status,
     };
@@ -126,16 +132,20 @@ pub extern "C" fn rustak_ffi_encode_tak_v1(
         Err(_) => return RustakFfiStatus::EncodeError,
     };
 
-    write_vec_to_out_buffer(encoded, out_buffer)
+    unsafe { write_vec_to_out_buffer(encoded, out_buffer) }
 }
 
 #[no_mangle]
-pub extern "C" fn rustak_ffi_decode_tak_v1(
+/// # Safety
+///
+/// `input_ptr` must point to `input_len` readable bytes, and `out_buffer`
+/// must be a valid, writable pointer to a `RustakFfiBuffer`.
+pub unsafe extern "C" fn rustak_ffi_decode_tak_v1(
     input_ptr: *const u8,
     input_len: usize,
     out_buffer: *mut RustakFfiBuffer,
 ) -> RustakFfiStatus {
-    let input = match copy_input(input_ptr, input_len) {
+    let input = match unsafe { copy_input(input_ptr, input_len) } {
         Ok(input) => input,
         Err(status) => return status,
     };
@@ -145,11 +155,15 @@ pub extern "C" fn rustak_ffi_decode_tak_v1(
         Err(_) => return RustakFfiStatus::DecodeError,
     };
 
-    write_vec_to_out_buffer(decoded, out_buffer)
+    unsafe { write_vec_to_out_buffer(decoded, out_buffer) }
 }
 
 #[no_mangle]
-pub extern "C" fn rustak_ffi_buffer_free(buffer: *mut RustakFfiBuffer) -> RustakFfiStatus {
+/// # Safety
+///
+/// `buffer` must be either null or a valid pointer to a `RustakFfiBuffer`
+/// previously initialized by RusTAK FFI APIs.
+pub unsafe extern "C" fn rustak_ffi_buffer_free(buffer: *mut RustakFfiBuffer) -> RustakFfiStatus {
     if buffer.is_null() {
         return RustakFfiStatus::NullPointer;
     }
@@ -169,7 +183,7 @@ pub extern "C" fn rustak_ffi_buffer_free(buffer: *mut RustakFfiBuffer) -> Rustak
 
     unsafe {
         let _ = Vec::from_raw_parts(buffer_ref.ptr, buffer_ref.len, buffer_ref.capacity);
-    }
+    };
 
     buffer_ref.ptr = ptr::null_mut();
     buffer_ref.len = 0;
@@ -177,7 +191,7 @@ pub extern "C" fn rustak_ffi_buffer_free(buffer: *mut RustakFfiBuffer) -> Rustak
     RustakFfiStatus::Ok
 }
 
-fn copy_input(input_ptr: *const u8, input_len: usize) -> Result<Vec<u8>, RustakFfiStatus> {
+unsafe fn copy_input(input_ptr: *const u8, input_len: usize) -> Result<Vec<u8>, RustakFfiStatus> {
     if input_ptr.is_null() {
         return Err(RustakFfiStatus::NullPointer);
     }
@@ -192,7 +206,7 @@ fn copy_input(input_ptr: *const u8, input_len: usize) -> Result<Vec<u8>, RustakF
     Ok(bytes.to_vec())
 }
 
-fn write_vec_to_out_buffer(
+unsafe fn write_vec_to_out_buffer(
     mut bytes: Vec<u8>,
     out_buffer: *mut RustakFfiBuffer,
 ) -> RustakFfiStatus {
@@ -207,9 +221,7 @@ fn write_vec_to_out_buffer(
     };
     std::mem::forget(bytes);
 
-    unsafe {
-        out_buffer.write(output);
-    }
+    unsafe { out_buffer.write(output) };
     RustakFfiStatus::Ok
 }
 
@@ -228,7 +240,8 @@ mod tests {
             minor: 0,
             patch: 0,
         };
-        let status = rustak_ffi_negotiate_abi_version(RUSTAK_FFI_ABI_MAJOR, &mut negotiated);
+        let status =
+            unsafe { rustak_ffi_negotiate_abi_version(RUSTAK_FFI_ABI_MAJOR, &mut negotiated) };
         assert_eq!(status, RustakFfiStatus::Ok);
         assert_eq!(negotiated, rustak_ffi_current_abi_version());
     }
@@ -240,7 +253,8 @@ mod tests {
             minor: 0,
             patch: 0,
         };
-        let status = rustak_ffi_negotiate_abi_version(RUSTAK_FFI_ABI_MAJOR + 1, &mut negotiated);
+        let status =
+            unsafe { rustak_ffi_negotiate_abi_version(RUSTAK_FFI_ABI_MAJOR + 1, &mut negotiated) };
         assert_eq!(status, RustakFfiStatus::UnsupportedVersion);
         assert_eq!(negotiated, rustak_ffi_current_abi_version());
     }
@@ -251,17 +265,25 @@ mod tests {
         let mut encoded = RustakFfiBuffer::default();
         let mut decoded = RustakFfiBuffer::default();
 
-        let encode_status = rustak_ffi_encode_tak_v1(source.as_ptr(), source.len(), &mut encoded);
+        let encode_status =
+            unsafe { rustak_ffi_encode_tak_v1(source.as_ptr(), source.len(), &mut encoded) };
         assert_eq!(encode_status, RustakFfiStatus::Ok);
 
-        let decode_status = rustak_ffi_decode_tak_v1(encoded.ptr, encoded.len, &mut decoded);
+        let decode_status =
+            unsafe { rustak_ffi_decode_tak_v1(encoded.ptr, encoded.len, &mut decoded) };
         assert_eq!(decode_status, RustakFfiStatus::Ok);
 
         let round_trip = unsafe { std::slice::from_raw_parts(decoded.ptr, decoded.len) };
         assert_eq!(round_trip, source.as_slice());
 
-        assert_eq!(rustak_ffi_buffer_free(&mut encoded), RustakFfiStatus::Ok);
-        assert_eq!(rustak_ffi_buffer_free(&mut decoded), RustakFfiStatus::Ok);
+        assert_eq!(
+            unsafe { rustak_ffi_buffer_free(&mut encoded) },
+            RustakFfiStatus::Ok
+        );
+        assert_eq!(
+            unsafe { rustak_ffi_buffer_free(&mut decoded) },
+            RustakFfiStatus::Ok
+        );
         assert!(encoded.ptr.is_null());
         assert!(decoded.ptr.is_null());
     }
@@ -269,7 +291,9 @@ mod tests {
     #[test]
     fn null_output_buffer_is_rejected() {
         let source = b"<event uid=\"ffi-null\"/>".to_vec();
-        let status = rustak_ffi_encode_tak_v1(source.as_ptr(), source.len(), std::ptr::null_mut());
+        let status = unsafe {
+            rustak_ffi_encode_tak_v1(source.as_ptr(), source.len(), std::ptr::null_mut())
+        };
         assert_eq!(status, RustakFfiStatus::NullPointer);
     }
 }

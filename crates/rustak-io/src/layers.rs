@@ -309,10 +309,12 @@ where
         K: Ord,
         S: MessageSink<T>,
     {
-        let mut state = self.state.lock().expect("coalesce mutex poisoned");
-        let mut items: Vec<(K, MessageEnvelope<T>)> = state.entries.drain().collect();
-        state.order.clear();
-        drop(state);
+        let mut items: Vec<(K, MessageEnvelope<T>)> = {
+            let mut state = self.state.lock().expect("coalesce mutex poisoned");
+            let items = state.entries.drain().collect();
+            state.order.clear();
+            items
+        };
 
         items.sort_by(|(left, _), (right, _)| left.cmp(right));
         let total = items.len();
@@ -612,7 +614,7 @@ mod tests {
 
         fn advance(&self, duration: Duration) {
             let mut now = self.now.lock().expect("clock mutex poisoned");
-            *now = *now + duration;
+            *now += duration;
         }
     }
 

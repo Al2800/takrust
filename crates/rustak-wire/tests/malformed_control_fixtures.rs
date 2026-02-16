@@ -17,14 +17,14 @@ fn malformed_control_fixtures_remain_fail_closed_terminated() {
         let mut negotiator = Negotiator::new(DowngradePolicy::FailClosed);
         negotiator.begin_upgrade_attempt();
         let event = negotiator.observe_control_frame(fixture);
+        let parse_result = rustak_wire::negotiation::events::parse_control_frame(fixture);
 
-        if let Ok(_) = rustak_wire::negotiation::events::parse_control_frame(fixture) {
+        if parse_result.is_ok() {
             assert_eq!(event.kind, NegotiationEventKind::UpgradeAccepted);
             continue;
         }
 
-        let parse_error = rustak_wire::negotiation::events::parse_control_frame(fixture)
-            .expect_err("fixture should be malformed or unsupported");
+        let parse_error = parse_result.expect_err("fixture should be malformed or unsupported");
         match parse_error {
             ControlFrameError::UnsupportedVersion { .. } => {
                 assert_eq!(event.kind, NegotiationEventKind::Terminated);
@@ -46,15 +46,15 @@ fn malformed_control_fixtures_remain_fail_open_fallback() {
         let mut negotiator = Negotiator::new(DowngradePolicy::FailOpen);
         negotiator.begin_upgrade_attempt();
         let event = negotiator.observe_control_frame(fixture);
+        let parse_result = rustak_wire::negotiation::events::parse_control_frame(fixture);
 
-        if let Ok(_) = rustak_wire::negotiation::events::parse_control_frame(fixture) {
+        if parse_result.is_ok() {
             assert_eq!(event.kind, NegotiationEventKind::UpgradeAccepted);
             continue;
         }
 
         assert_eq!(event.kind, NegotiationEventKind::FallbackToLegacy);
-        let parse_error = rustak_wire::negotiation::events::parse_control_frame(fixture)
-            .expect_err("fixture should be malformed or unsupported");
+        let parse_error = parse_result.expect_err("fixture should be malformed or unsupported");
         match parse_error {
             ControlFrameError::UnsupportedVersion { .. } => {
                 assert_eq!(event.reason, Some(NegotiationReason::UnsupportedVersion));

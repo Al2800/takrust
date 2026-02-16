@@ -553,7 +553,7 @@ pub fn fuzz_hook_validate_transport_config(data: &[u8]) -> Result<(), TransportC
 
     if let Some(mtu_safety) = config.mtu_safety.as_mut() {
         mtu_safety.max_udp_payload_bytes = word_at(data, 24);
-        mtu_safety.drop_oversize = byte_at(data, 26).is_multiple_of(2);
+        mtu_safety.drop_oversize = byte_at(data, 26) % 2 == 0;
     }
 
     config.reconnect_policy.backoff_factor = (byte_at(data, 27) as f64) / 64.0;

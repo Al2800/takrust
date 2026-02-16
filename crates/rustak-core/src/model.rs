@@ -245,7 +245,7 @@ impl fmt::Display for CoreError {
 
 impl std::error::Error for CoreError {}
 
-fn normalize_detail_elements(elements: &mut Vec<DetailElement>) -> Result<(), CoreError> {
+fn normalize_detail_elements(elements: &mut [DetailElement]) -> Result<(), CoreError> {
     let track_count = elements
         .iter()
         .filter(|element| matches!(element, DetailElement::Track(_)))

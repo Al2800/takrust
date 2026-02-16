@@ -84,9 +84,7 @@ impl ContactCapabilities {
 
     #[must_use]
     pub fn supports(&self, version: TakProtocolVersion) -> bool {
-        self.supported_versions
-            .iter()
-            .any(|candidate| *candidate == version)
+        self.supported_versions.contains(&version)
     }
 }
 
@@ -181,10 +179,8 @@ mod tests {
 
     #[test]
     fn mesh_version_is_selected_when_all_contacts_support_v1() {
-        let alpha =
-            ContactCapabilities::new("alpha", vec![TakProtocolVersion::V1]).expect("valid");
-        let bravo =
-            ContactCapabilities::new("bravo", vec![TakProtocolVersion::V1]).expect("valid");
+        let alpha = ContactCapabilities::new("alpha", vec![TakProtocolVersion::V1]).expect("valid");
+        let bravo = ContactCapabilities::new("bravo", vec![TakProtocolVersion::V1]).expect("valid");
 
         assert_eq!(
             select_mesh_version(&[alpha, bravo]),
