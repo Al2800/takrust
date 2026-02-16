@@ -1,0 +1,12 @@
+[package]
+name = "rustak-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "Bridge configuration contracts for TAK <-> SAPIENT workflows"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-limits = { path = "../rustak-limits" }
+thiserror = "2.0"
+
+[workspace]

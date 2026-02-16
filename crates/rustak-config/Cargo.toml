@@ -1,0 +1,14 @@
+[package]
+name = "rustak-config"
+version = "0.1.0"
+edition = "2021"
+description = "Typed workspace config contracts and limits migration helpers for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-limits = { path = "../rustak-limits" }
+rustak-sapient = { path = "../rustak-sapient" }
+rustak-transport = { path = "../rustak-transport" }
+thiserror = "2.0"
+
+[workspace]
