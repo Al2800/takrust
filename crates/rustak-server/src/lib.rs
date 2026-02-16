@@ -13,6 +13,7 @@ pub struct ServerClientConfig {
     pub transport: TransportConfig,
     pub protocol_version: TakProtocolVersion,
     pub crypto: Option<CryptoConfig>,
+    pub provider_support: ProviderSupport,
 }
 
 impl Default for ServerClientConfig {
@@ -24,6 +25,7 @@ impl Default for ServerClientConfig {
             transport: TransportConfig::default(),
             protocol_version: TakProtocolVersion::V1,
             crypto: None,
+            provider_support: ProviderSupport::default(),
         }
     }
 }
@@ -40,7 +42,7 @@ impl ServerClientConfig {
         }
 
         if let Some(crypto) = &self.crypto {
-            crypto.validate(ProviderSupport::default())?;
+            crypto.validate(self.provider_support)?;
         }
 
         Ok(())
@@ -235,7 +237,9 @@ fn validate_capabilities(capabilities: &[String]) -> Result<(), ServerConfigErro
 #[cfg(test)]
 mod tests {
     use super::{ServerClientConfig, ServerConfigError, StreamingClient};
-    use rustak_crypto::{CryptoConfig, CryptoProviderMode, IdentitySource, RevocationPolicy};
+    use rustak_crypto::{
+        CryptoConfig, CryptoProviderMode, IdentitySource, ProviderSupport, RevocationPolicy,
+    };
     use rustak_wire::TakProtocolVersion;
     use std::path::PathBuf;
 
@@ -261,8 +265,8 @@ mod tests {
             ..ServerClientConfig::default()
         };
 
-        let error = StreamingClient::new(config)
-            .expect_err("duplicate capabilities should be rejected");
+        let error =
+            StreamingClient::new(config).expect_err("duplicate capabilities should be rejected");
         assert!(matches!(
             error,
             ServerConfigError::DuplicateCapability { .. }
@@ -282,6 +286,45 @@ mod tests {
                 },
             }),
             protocol_version: TakProtocolVersion::V1,
+            ..ServerClientConfig::default()
+        };
+
+        assert!(StreamingClient::new(config).is_ok());
+    }
+
+    #[test]
+    fn rejects_fips_provider_without_support() {
+        let config = ServerClientConfig {
+            endpoint: "https://tak.example:8443".to_owned(),
+            crypto: Some(CryptoConfig {
+                provider: CryptoProviderMode::AwsLcRsFips,
+                revocation: RevocationPolicy::Prefer,
+                identity: IdentitySource::Pkcs12File {
+                    archive_path: PathBuf::from("tests/fixtures/certs/dev_identity.p12"),
+                    password: Some("dev-pass".to_owned()),
+                },
+            }),
+            ..ServerClientConfig::default()
+        };
+
+        let error =
+            StreamingClient::new(config).expect_err("fips provider should require support flag");
+        assert!(matches!(error, ServerConfigError::InvalidCrypto(_)));
+    }
+
+    #[test]
+    fn accepts_fips_provider_with_support() {
+        let config = ServerClientConfig {
+            endpoint: "https://tak.example:8443".to_owned(),
+            crypto: Some(CryptoConfig {
+                provider: CryptoProviderMode::AwsLcRsFips,
+                revocation: RevocationPolicy::Prefer,
+                identity: IdentitySource::Pkcs12File {
+                    archive_path: PathBuf::from("tests/fixtures/certs/dev_identity.p12"),
+                    password: Some("dev-pass".to_owned()),
+                },
+            }),
+            provider_support: ProviderSupport::with_fips_enabled(true),
             ..ServerClientConfig::default()
         };
 

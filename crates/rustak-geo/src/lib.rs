@@ -23,8 +23,9 @@ pub fn haversine_distance_meters(from: &Position, to: &Position) -> f64 {
     let delta_lat = lat2 - lat1;
     let delta_lon = lon2 - lon1;
 
-    let haversine =
-        (delta_lat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
+    let haversine = ((delta_lat / 2.0).sin().powi(2)
+        + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2))
+    .clamp(0.0, 1.0);
     let central_angle = 2.0 * haversine.sqrt().asin();
 
     WGS84_AUTHALIC_RADIUS_METERS * central_angle
@@ -71,6 +72,9 @@ pub fn interpolate_great_circle(
     }
 
     let sin_angle = central_angle.sin();
+    if sin_angle.abs() <= EPSILON {
+        return interpolate_linearly(from, to, fraction);
+    }
     let weight_a = ((1.0 - fraction) * central_angle).sin() / sin_angle;
     let weight_b = (fraction * central_angle).sin() / sin_angle;
 
@@ -130,8 +134,9 @@ fn haversine_central_angle(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     let delta_lat = lat2 - lat1;
     let delta_lon = lon2 - lon1;
 
-    let haversine =
-        (delta_lat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
+    let haversine = ((delta_lat / 2.0).sin().powi(2)
+        + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2))
+    .clamp(0.0, 1.0);
     2.0 * haversine.sqrt().asin()
 }
 
@@ -250,5 +255,28 @@ mod tests {
         let error = interpolate_great_circle(&left, &right, 1.1)
             .expect_err("fraction above one should be rejected");
         assert_eq!(error, GeoError::InvalidFraction { fraction: 1.1 });
+    }
+
+    #[test]
+    fn interpolation_for_antipodal_points_stays_finite() {
+        let left = Position::new(0.0, 0.0).expect("point should validate");
+        let right = Position::new(0.0, 180.0).expect("point should validate");
+
+        let midpoint = interpolate_great_circle(&left, &right, 0.5).expect("midpoint should work");
+        assert!(midpoint.latitude().is_finite());
+        assert!(midpoint.longitude().is_finite());
+    }
+
+    #[test]
+    fn antipodal_distance_is_half_circumference() {
+        let left = Position::new(0.0, 0.0).expect("point should validate");
+        let right = Position::new(0.0, 180.0).expect("point should validate");
+
+        let distance = haversine_distance_meters(&left, &right);
+        approx_equal(
+            distance,
+            std::f64::consts::PI * crate::WGS84_AUTHALIC_RADIUS_METERS,
+            1e-6,
+        );
     }
 }
