@@ -3,6 +3,14 @@ use std::time::Duration;
 use rustak_limits::{Limits, LimitsError};
 use thiserror::Error;
 
+pub mod codec;
+pub mod framing;
+pub mod session;
+
+pub use codec::{SapientCodec, SapientCodecError};
+pub use framing::{SapientFrameCodec, SapientFrameError};
+pub use session::{SapientSessionBuffers, SapientSessionError, SessionDirection};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SapientConfig {
     pub limits: Limits,
@@ -28,6 +36,21 @@ impl SapientConfig {
         ensure_non_zero_duration("read_timeout", self.read_timeout)?;
         ensure_non_zero_duration("write_timeout", self.write_timeout)?;
         Ok(())
+    }
+
+    #[must_use]
+    pub fn frame_codec(&self) -> SapientFrameCodec {
+        SapientFrameCodec::from_limits(&self.limits)
+    }
+
+    #[must_use]
+    pub fn codec(&self) -> SapientCodec {
+        SapientCodec::from_config(self)
+    }
+
+    #[must_use]
+    pub fn session_buffers(&self) -> SapientSessionBuffers {
+        SapientSessionBuffers::from_limits(&self.limits)
     }
 }
 
@@ -62,7 +85,7 @@ pub fn fuzz_hook_validate_sapient_config(data: &[u8]) -> Result<(), SapientConfi
     config.limits.max_detail_elements = word_at(data, 10);
     config.read_timeout = Duration::from_millis(word_at(data, 12) as u64);
     config.write_timeout = Duration::from_millis(word_at(data, 14) as u64);
-    config.tcp_nodelay = byte_at(data, 16) % 2 == 0;
+    config.tcp_nodelay = byte_at(data, 16).is_multiple_of(2);
     config.validate()
 }
 
@@ -92,8 +115,10 @@ mod tests {
 
     #[test]
     fn rejects_zero_read_timeout() {
-        let mut cfg = SapientConfig::default();
-        cfg.read_timeout = Duration::ZERO;
+        let cfg = SapientConfig {
+            read_timeout: Duration::ZERO,
+            ..SapientConfig::default()
+        };
         assert_eq!(
             cfg.validate(),
             Err(SapientConfigError::ZeroDuration {

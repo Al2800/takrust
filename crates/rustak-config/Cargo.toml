@@ -6,9 +6,15 @@ description = "Typed workspace config contracts and limits migration helpers for
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+schemars = { version = "0.8", features = ["derive"] }
 rustak-limits = { path = "../rustak-limits" }
+rustak-bridge = { path = "../rustak-bridge" }
 rustak-sapient = { path = "../rustak-sapient" }
 rustak-transport = { path = "../rustak-transport" }
+rustak-wire = { path = "../rustak-wire" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
 thiserror = "2.0"
 
 [workspace]

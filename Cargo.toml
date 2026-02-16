@@ -9,3 +9,43 @@ rust-version = "1.82"
 
 [workspace.metadata.ci]
 msrv = "1.82.0"
+
+[workspace.metadata.release_profiles.tak_only]
+description = "Standalone TAK-focused build/profile without SAPIENT bridge components"
+included_crates = [
+  "rustak-core",
+  "rustak-limits",
+  "rustak-wire",
+  "rustak-transport",
+  "rustak-net",
+  "rustak-record",
+]
+forbidden_crates = ["rustak-sapient", "rustak-bridge"]
+acceptance_commands = [
+  "cargo test --manifest-path tests/release_profiles/Cargo.toml -- --exact profile_matrix_tak_only_is_consistent",
+  "cargo test --manifest-path crates/rustak-wire/Cargo.toml",
+  "cargo test --manifest-path crates/rustak-transport/Cargo.toml",
+  "cargo test --manifest-path crates/rustak-record/Cargo.toml",
+]
+
+[workspace.metadata.release_profiles.tak_sapient]
+description = "TAK profile including SAPIENT and bridge integration surfaces"
+included_crates = [
+  "rustak-core",
+  "rustak-limits",
+  "rustak-wire",
+  "rustak-transport",
+  "rustak-net",
+  "rustak-sapient",
+  "rustak-bridge",
+  "rustak-config",
+  "rustak-record",
+]
+forbidden_crates = []
+acceptance_commands = [
+  "cargo test --manifest-path tests/release_profiles/Cargo.toml -- --exact profile_matrix_tak_sapient_includes_bridge_components",
+  "cargo test --manifest-path crates/rustak-sapient/Cargo.toml",
+  "cargo test --manifest-path crates/rustak-bridge/Cargo.toml",
+  "cargo test --manifest-path crates/rustak-record/Cargo.toml",
+  "cargo test --manifest-path crates/rustak-record/Cargo.toml recovery_",
+]

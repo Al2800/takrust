@@ -1,0 +1,15 @@
+[package]
+name = "rustak-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core domain primitives and UTC timestamp contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[features]
+default = []
+chrono = ["dep:chrono"]
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"], optional = true }
+
+[workspace]

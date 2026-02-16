@@ -1,0 +1,52 @@
+[
+  {
+    "stream_id": "alpha",
+    "sequence": 2,
+    "timestamp_nanos": 1700000000000002000,
+    "uid": "uas-002",
+    "cot_type": "a-f-G-U-C",
+    "classification": "unknown",
+    "behavior": "loiter",
+    "confidence": 0.52
+  },
+  {
+    "stream_id": "alpha",
+    "sequence": 1,
+    "timestamp_nanos": 1700000000000001000,
+    "uid": "uas-001",
+    "cot_type": "a-f-G-U-C",
+    "classification": "friendly",
+    "behavior": "patrol",
+    "confidence": 0.93
+  },
+  {
+    "stream_id": "beta",
+    "sequence": 3,
+    "timestamp_nanos": 1700000000000003100,
+    "uid": "trk-211",
+    "cot_type": "a-n-A-C-F",
+    "classification": "hostile",
+    "behavior": "approach",
+    "confidence": 0.81
+  },
+  {
+    "stream_id": "beta",
+    "sequence": 1,
+    "timestamp_nanos": 1700000000000001100,
+    "uid": "trk-210",
+    "cot_type": "a-n-A-C-F",
+    "classification": "unknown",
+    "behavior": "hover",
+    "confidence": 0.47
+  },
+  {
+    "stream_id": "beta",
+    "sequence": 2,
+    "timestamp_nanos": 1700000000000002100,
+    "uid": "trk-210",
+    "cot_type": "a-n-A-C-F",
+    "classification": "suspect",
+    "behavior": "turn",
+    "confidence": 0.59
+  }
+]

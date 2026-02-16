@@ -8,6 +8,17 @@ The repository is currently in architecture-to-implementation bootstrap. Foundat
 - `rustak_architecture_v2_foundational_20260216_101917.md`
 - `AGENTS.md`
 
+## Quickstart Paths
+
+Use the profile-specific quickstarts:
+
+- TAK-only path: `docs/quickstart_tak_only.md`
+- TAK + SAPIENT bridge path: `docs/quickstart_bridge.md`
+- Profile gate matrix: `docs/conformance.md`
+
+These guides map directly to `workspace.metadata.release_profiles` in root `Cargo.toml`
+and the profile matrix tests under `tests/release_profiles/tests/profile_matrix.rs`.
+
 ## `xtask` automation commands
 
 This repository uses an `xtask` binary crate for consistent local/CI orchestration.
@@ -39,4 +50,3 @@ cargo run -p xtask -- release-check
 - `0`: success
 - `1`: command execution failure
 - `2`: usage error
-

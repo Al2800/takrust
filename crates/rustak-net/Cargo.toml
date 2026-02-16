@@ -1,16 +1,11 @@
 [package]
-name = "rustak-transport"
+name = "rustak-net"
 version = "0.1.0"
 edition = "2021"
-description = "Transport-layer configuration contracts for RusTAK"
+description = "Protocol-agnostic async networking primitives for RusTAK"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bytes = "1.10"
-rustak-net = { path = "../rustak-net" }
-rustak-limits = { path = "../rustak-limits" }
-rustak-io = { path = "../rustak-io" }
-rustak-wire = { path = "../rustak-wire" }
 thiserror = "2.0"
 tokio = { version = "1.48", features = ["io-util"] }
 

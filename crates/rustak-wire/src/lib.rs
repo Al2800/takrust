@@ -3,8 +3,10 @@ use std::time::Duration;
 use rustak_limits::{Limits, LimitsError};
 use thiserror::Error;
 
+pub mod framing;
 pub mod negotiation;
 
+pub use framing::{WireFrameCodec, WireFrameError, LEGACY_XML_DELIMITER};
 pub use negotiation::{
     NegotiationEvent, NegotiationEventKind, NegotiationReason, NegotiationState, Negotiator,
     TakProtocolVersion,
@@ -41,19 +43,10 @@ impl Default for NegotiationConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct WireConfig {
     pub limits: Limits,
     pub negotiation: NegotiationConfig,
-}
-
-impl Default for WireConfig {
-    fn default() -> Self {
-        Self {
-            limits: Limits::default(),
-            negotiation: NegotiationConfig::default(),
-        }
-    }
 }
 
 impl WireConfig {
@@ -78,6 +71,11 @@ impl WireConfig {
         }
 
         Ok(())
+    }
+
+    #[must_use]
+    pub fn frame_codec(&self, format: WireFormat) -> WireFrameCodec {
+        WireFrameCodec::from_limits(format, &self.limits)
     }
 }
 

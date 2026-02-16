@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "schema_version": "bsi_flex_335_v2_0",
+      "codec_payload_utf8": "SAPIENT|bsi_flex_335_v2_0|detection|node-alpha|track=trk-001|seq=1",
+      "inbound_session_sequence_utf8": [
+        "SAPIENT|bsi_flex_335_v2_0|registration|node-alpha",
+        "SAPIENT|bsi_flex_335_v2_0|heartbeat|node-alpha|seq=2"
+      ],
+      "outbound_session_sequence_utf8": [
+        "SAPIENT|bsi_flex_335_v2_0|ack|node-alpha|seq=1",
+        "SAPIENT|bsi_flex_335_v2_0|tasking_ack|node-alpha|task=task-042"
+      ]
+    },
+    {
+      "schema_version": "bsi_flex_335_v2_1",
+      "codec_payload_utf8": "SAPIENT|bsi_flex_335_v2_1|detection|node-alpha|track=trk-001|seq=1|confidence=0.87",
+      "inbound_session_sequence_utf8": [
+        "SAPIENT|bsi_flex_335_v2_1|registration|node-alpha|capabilities=tasking",
+        "SAPIENT|bsi_flex_335_v2_1|heartbeat|node-alpha|seq=2|latency_ms=14"
+      ],
+      "outbound_session_sequence_utf8": [
+        "SAPIENT|bsi_flex_335_v2_1|ack|node-alpha|seq=1",
+        "SAPIENT|bsi_flex_335_v2_1|tasking_ack|node-alpha|task=task-042|result=accepted"
+      ]
+    }
+  ]
+}

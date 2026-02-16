@@ -1,2 +1,14 @@
 # bv (beads viewer) local config and caches
 .bv/
+
+# Rust build artifacts
+/target/
+**/target/
+
+# Local scratch binaries
+a.out
+
+# Keep root workspace lockfile; ignore per-crate/generated locks
+crates/*/Cargo.lock
+fuzz/Cargo.lock
+tests/*/Cargo.lock

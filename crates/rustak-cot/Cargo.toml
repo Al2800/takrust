@@ -1,0 +1,11 @@
+[package]
+name = "rustak-cot"
+version = "0.1.0"
+edition = "2021"
+description = "CoT extension contract surface and conformance tests for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-core = { path = "../rustak-core" }
+
+[workspace]
