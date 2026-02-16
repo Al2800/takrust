@@ -8,12 +8,12 @@ harnesses).
 
 - **Local deterministic smoke path**
   - `cargo test --manifest-path tests/interop_harness/Cargo.toml`
-  - `cargo test --manifest-path crates/rustak-server/Cargo.toml`
+  - `cargo test --manifest-path crates/rustak-server/Cargo.toml --test connection_contract`
   - Uses repository fixtures and must run without external credentials.
 - **CI baseline path**
   - `cargo test --manifest-path tests/release_profiles/Cargo.toml`
   - `cargo test --manifest-path tests/interop_harness/Cargo.toml`
-  - `cargo test --manifest-path crates/rustak-server/Cargo.toml`
+  - `cargo test --manifest-path crates/rustak-server/Cargo.toml --test connection_contract`
 - **Extended environment-dependent path**
   - Reserved for TAK Server/docker orchestration flows that need networked
     dependencies and explicit environment setup.

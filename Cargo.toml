@@ -6,6 +6,7 @@ members = [
   "crates/rustak-bridge",
   "crates/rustak-crypto",
   "crates/rustak-config",
+  "crates/rustak-commo",
   "crates/rustak-core",
   "crates/rustak-cot",
   "crates/rustak-io",

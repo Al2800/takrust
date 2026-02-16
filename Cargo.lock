@@ -616,6 +616,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustak-commo"
+version = "0.1.0"
+dependencies = [
+ "rustak-wire",
+ "thiserror",
+]
+
+[[package]]
 name = "rustak-config"
 version = "0.1.0"
 dependencies = [

@@ -1,50 +1,86 @@
-use rustak_server::{ServerError, TakServerClient, TakServerConfig};
-use rustak_wire::WireFormat;
+use std::path::PathBuf;
 
-#[test]
-fn connect_exposes_channel_capabilities_and_health() {
-    let mut config = TakServerConfig::default();
-    config.host = "tak.example.local".to_owned();
-    config.wire_format = WireFormat::TakProtocolV1;
-    config.transport.wire_format = WireFormat::TakProtocolV1;
+use rustak_crypto::{CryptoConfig, CryptoProviderMode, IdentitySource, RevocationPolicy};
+use rustak_server::{ConnectionContract, ServerClientConfig, ServerClientError, StreamingClient};
+use rustak_transport::TransportFraming;
+use rustak_wire::TakProtocolVersion;
 
-    let mut client = TakServerClient::connect(config).expect("connect should succeed");
-    assert!(client.is_connected());
-    assert!(client.capabilities().supports_streaming);
-    assert!(client.capabilities().supports_management_api);
-    assert_eq!(
-        client.capabilities().negotiated_wire_format,
-        WireFormat::TakProtocolV1
-    );
-    assert_eq!(
-        client.cot_channel_config().wire_format,
-        WireFormat::TakProtocolV1
-    );
-
-    let health = client.health();
-    assert!(health.connected);
-    assert_eq!(health.host, "tak.example.local");
-    assert_eq!(health.streaming_port, 8089);
-    assert_eq!(health.api_port, 8443);
-
-    client.disconnect();
-    assert!(!client.health().connected);
+fn secure_config() -> ServerClientConfig {
+    ServerClientConfig {
+        endpoint: "https://tak.example:8443".to_owned(),
+        channel_path: "/Marti/api/channels/streaming".to_owned(),
+        required_capabilities: vec!["cot-stream".to_owned(), "streaming".to_owned()],
+        crypto: Some(CryptoConfig {
+            provider: CryptoProviderMode::Ring,
+            revocation: RevocationPolicy::Prefer,
+            identity: IdentitySource::Pkcs12File {
+                archive_path: PathBuf::from("tests/fixtures/certs/dev_identity.p12"),
+                password: Some("dev-pass".to_owned()),
+            },
+        }),
+        ..ServerClientConfig::default()
+    }
 }
 
 #[test]
-fn connect_rejects_invalid_contract_boundaries() {
-    let mut empty_host = TakServerConfig::default();
-    empty_host.host.clear();
-    let host_error = TakServerClient::connect(empty_host).expect_err("empty host must fail");
-    assert!(matches!(host_error, ServerError::EmptyHost));
+fn connect_contract_rejects_unreachable_server() {
+    let client = StreamingClient::new(secure_config()).expect("config should validate");
+    let contract = ConnectionContract {
+        server_reachable: false,
+        supports_tls: true,
+        advertised_channels: vec!["/Marti/api/channels/streaming".to_owned()],
+        advertised_capabilities: vec!["cot-stream".to_owned(), "streaming".to_owned()],
+    };
 
-    let mut wire_mismatch = TakServerConfig::default();
-    wire_mismatch.wire_format = WireFormat::TakProtocolV1;
-    wire_mismatch.transport.wire_format = WireFormat::Xml;
-    let mismatch_error =
-        TakServerClient::connect(wire_mismatch).expect_err("wire mismatch must fail");
-    assert!(matches!(
-        mismatch_error,
-        ServerError::WireFormatMismatch { .. }
-    ));
+    let error = client
+        .connect_contract(&contract)
+        .expect_err("unreachable server should fail");
+    assert!(matches!(error, ServerClientError::ServerUnreachable { .. }));
+}
+
+#[test]
+fn connect_contract_rejects_missing_channel() {
+    let client = StreamingClient::new(secure_config()).expect("config should validate");
+    let contract = ConnectionContract {
+        server_reachable: true,
+        supports_tls: true,
+        advertised_channels: vec!["/Marti/api/channels/status".to_owned()],
+        advertised_capabilities: vec!["cot-stream".to_owned(), "streaming".to_owned()],
+    };
+
+    let error = client
+        .connect_contract(&contract)
+        .expect_err("missing streaming channel should fail");
+    assert!(matches!(error, ServerClientError::MissingChannel { .. }));
+}
+
+#[test]
+fn connect_contract_returns_session_on_valid_boundary_contract() {
+    let client = StreamingClient::new(secure_config()).expect("config should validate");
+    let contract = ConnectionContract {
+        server_reachable: true,
+        supports_tls: true,
+        advertised_channels: vec![
+            "/Marti/api/channels/health".to_owned(),
+            "/Marti/api/channels/streaming".to_owned(),
+        ],
+        advertised_capabilities: vec![
+            "cot-stream".to_owned(),
+            "streaming".to_owned(),
+            "legacy-xml".to_owned(),
+        ],
+    };
+
+    let session = client
+        .connect_contract(&contract)
+        .expect("matching contract should establish session");
+
+    assert_eq!(session.endpoint, "https://tak.example:8443");
+    assert_eq!(session.channel_path, "/Marti/api/channels/streaming");
+    assert_eq!(session.protocol_version, TakProtocolVersion::V1);
+    assert_eq!(session.framing, TransportFraming::XmlNewlineDelimited);
+    assert_eq!(
+        session.negotiated_capabilities,
+        vec!["cot-stream".to_owned(), "streaming".to_owned()]
+    );
 }

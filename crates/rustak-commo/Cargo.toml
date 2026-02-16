@@ -1,0 +1,10 @@
+[package]
+name = "rustak-commo"
+version = "0.1.0"
+edition = "2021"
+description = "Mesh comms cadence and contact/version tracking contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-wire = { path = "../rustak-wire" }
+thiserror = "2.0"
