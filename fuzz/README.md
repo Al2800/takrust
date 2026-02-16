@@ -9,9 +9,16 @@ Available hooks:
 - `wire_limits_hook`
 - `transport_limits_hook`
 - `sapient_limits_hook`
+- `wire_negotiation_hook`
 
 Example:
 
 ```bash
 cat seed.bin | cargo run --manifest-path fuzz/Cargo.toml --bin wire_limits_hook
+```
+
+Malformed control fixture example:
+
+```bash
+cat fuzz/corpus/negotiation/malformed_marker.bin | cargo run --manifest-path fuzz/Cargo.toml --bin wire_negotiation_hook
 ```

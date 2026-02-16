@@ -1,0 +1,11 @@
+[package]
+name = "rustak-sim"
+version = "0.1.0"
+edition = "2021"
+description = "Simulation IO boundary contracts for RusTAK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+rustak-io = { path = "../rustak-io" }
+
+[workspace]
