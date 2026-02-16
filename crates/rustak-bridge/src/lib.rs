@@ -11,6 +11,8 @@ pub mod time_policy;
 pub use correlator::{CorrelationInput, Correlator, CorrelatorConfig, CorrelatorError, UidPolicy};
 pub use dedup::{DedupConfig, DedupConfigError, DedupDecision, Deduplicator};
 pub use mapping::{BehaviourMapping, MappingSeverity, MappingTables, MappingValidationError};
+#[cfg(feature = "geo")]
+pub use mapping::{GeoMappingError, GeoProximityPolicy};
 pub use time_policy::{ResolvedCotTimes, TimePolicy, TimePolicyMode};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

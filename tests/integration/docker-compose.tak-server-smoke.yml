@@ -1,0 +1,7 @@
+services:
+  tak-server:
+    image: ${RUSTAK_TAK_SERVER_IMAGE:?set RUSTAK_TAK_SERVER_IMAGE to a TAK Server docker image}
+    container_name: rustak-tak-server-smoke
+    ports:
+      - "${RUSTAK_TAK_SERVER_STREAM_PORT:-8089}:8089"
+    restart: unless-stopped

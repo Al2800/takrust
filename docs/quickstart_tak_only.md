@@ -41,6 +41,16 @@ cargo run -p xtask -- ci
 
 Use this when you need full format/clippy/test verification instead of profile-scoped checks.
 
+## 4) Optional CLI command topology check
+
+```bash
+cargo run -p rustak-cli -- --help
+```
+
+Checkpoint:
+- CLI help renders the expected command tree (`listen`, `send`, `validate`, `sapient`, `bridge`, etc.).
+- Runtime transport/server operations are scaffolded and currently return explicit not-implemented errors.
+
 ## Troubleshooting
 
 - If `profile_matrix_tak_only_is_consistent` fails, align `workspace.metadata.release_profiles.tak_only` and `docs/conformance.md`.

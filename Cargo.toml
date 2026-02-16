@@ -3,6 +3,8 @@ members = [
   "xtask",
   "crates/rustak-admin",
   "crates/rustak",
+  "crates/rustak-cli",
+  "crates/rustak-ffi",
   "crates/rustak-bridge",
   "crates/rustak-crypto",
   "crates/rustak-config",

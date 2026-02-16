@@ -79,3 +79,19 @@ Before promoting a bridge-enabled release candidate, run and record all checks b
    - `cargo test --manifest-path tests/interop_harness/Cargo.toml bridge_replay_rc_gate_end_to_end_is_deterministic_under_replay_and_reconnect`
 
 Release should be blocked if any command fails or if the replay gate digest changes without an approved semantic-change review.
+
+## TAK Server Docker Smoke Harness
+
+Use the integration harness to run an environment-backed TAK Server stream
+smoke check:
+
+```bash
+export RUSTAK_TAK_SERVER_IMAGE=<tak-server-image>
+tests/integration/run_tak_server_smoke.sh
+```
+
+Optional overrides:
+
+- `RUSTAK_TAK_SERVER_STREAM_HOST` (default `127.0.0.1`)
+- `RUSTAK_TAK_SERVER_STREAM_PORT` (default `8089`)
+- `RUSTAK_TAK_SERVER_STREAM_PATH` (default `/Marti/api/channels/streaming`)

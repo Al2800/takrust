@@ -5,6 +5,12 @@ edition = "2021"
 description = "Bridge configuration contracts for TAK <-> SAPIENT workflows"
 license = "MIT OR Apache-2.0"
 
+[features]
+default = []
+geo = ["dep:rustak-core", "dep:rustak-geo"]
+
 [dependencies]
 rustak-limits = { path = "../rustak-limits" }
+rustak-core = { path = "../rustak-core", optional = true }
+rustak-geo = { path = "../rustak-geo", optional = true }
 thiserror = "2.0"

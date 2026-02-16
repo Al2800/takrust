@@ -1,0 +1,12 @@
+[package]
+name = "rustak-ffi"
+version = "0.1.0"
+edition = "2021"
+description = "Stable C ABI surface for RusTAK encode/decode boundaries"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["rlib", "cdylib", "staticlib"]
+
+[dependencies]
+rustak-proto = { path = "../rustak-proto" }

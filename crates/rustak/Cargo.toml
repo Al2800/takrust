@@ -17,3 +17,22 @@ rustak-sapient = { path = "../rustak-sapient" }
 rustak-transport = { path = "../rustak-transport" }
 rustak-wire = { path = "../rustak-wire" }
 thiserror = "2.0"
+
+[dev-dependencies]
+criterion = "0.5"
+rustak-sim = { path = "../rustak-sim" }
+
+[[bench]]
+name = "serialisation"
+harness = false
+path = "../../benches/serialisation.rs"
+
+[[bench]]
+name = "transport_throughput"
+harness = false
+path = "../../benches/transport_throughput.rs"
+
+[[bench]]
+name = "sim_track_generation"
+harness = false
+path = "../../benches/sim_track_generation.rs"

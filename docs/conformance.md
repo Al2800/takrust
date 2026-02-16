@@ -88,3 +88,21 @@ Current repository scaffolding for architecture-aligned test growth:
 As new conformance suites are added, keep fixture sources centralized under
 `tests/fixtures/**` and document each integration entrypoint under
 `tests/integration/**`.
+
+## Hardening Hooks
+
+Phase-5 hardening checks are exposed through `xtask`:
+
+- `cargo run -p xtask -- hardening-supply-chain`
+- `cargo run -p xtask -- hardening-loom`
+- `cargo run -p xtask -- hardening`
+
+Supply-chain prerequisites:
+
+- `cargo-deny`
+- `cargo-audit`
+- `cargo-vet`
+
+`hardening-loom` runs a workspace check under `RUSTFLAGS="--cfg loom"` when
+loom markers are present; otherwise it executes a deterministic baseline
+workspace check as the loom-smoke fallback.

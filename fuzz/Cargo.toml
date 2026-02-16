@@ -7,6 +7,7 @@ description = "Non-interactive fuzz hook entry points for limits enforcement"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+rustak-ffi = { path = "../crates/rustak-ffi" }
 rustak-sapient = { path = "../crates/rustak-sapient" }
 rustak-transport = { path = "../crates/rustak-transport" }
 rustak-wire = { path = "../crates/rustak-wire" }

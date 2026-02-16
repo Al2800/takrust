@@ -5,5 +5,11 @@ edition = "2021"
 description = "Simulation IO boundary contracts for RusTAK"
 license = "MIT OR Apache-2.0"
 
+[features]
+default = []
+geo = ["dep:rustak-core", "dep:rustak-geo"]
+
 [dependencies]
 rustak-io = { path = "../rustak-io" }
+rustak-core = { path = "../rustak-core", optional = true }
+rustak-geo = { path = "../rustak-geo", optional = true }

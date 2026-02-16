@@ -15,6 +15,7 @@ Use the profile-specific quickstarts:
 - TAK-only path: `docs/quickstart_tak_only.md`
 - TAK + SAPIENT bridge path: `docs/quickstart_bridge.md`
 - Profile gate matrix: `docs/conformance.md`
+- CLI topology/help: `cargo run -p rustak-cli -- --help`
 
 These guides map directly to `workspace.metadata.release_profiles` in root `Cargo.toml`
 and the profile matrix tests under `tests/release_profiles/tests/profile_matrix.rs`.

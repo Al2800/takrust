@@ -54,6 +54,16 @@ cargo test --manifest-path crates/rustak-record/Cargo.toml recovery_
 Checkpoint:
 - replay/recovery gate passes for bridge release confidence.
 
+## 5) Optional CLI command topology check
+
+```bash
+cargo run -p rustak-cli -- --help
+```
+
+Checkpoint:
+- CLI help renders bridge/SAPIENT-facing entrypoints in a single command tree.
+- Runtime bridge execution is scaffolded and currently returns an explicit not-implemented error.
+
 ## Troubleshooting
 
 - If profile test fails, align root `Cargo.toml` release profile metadata with `docs/conformance.md`.

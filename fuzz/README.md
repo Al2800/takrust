@@ -10,6 +10,7 @@ Available hooks:
 - `transport_limits_hook`
 - `sapient_limits_hook`
 - `wire_negotiation_hook`
+- `ffi_boundary_hook`
 
 Example:
 

@@ -1,5 +1,9 @@
 use std::collections::BTreeMap;
 
+#[cfg(feature = "geo")]
+use rustak_core::Position;
+#[cfg(feature = "geo")]
+use rustak_geo::haversine_distance_meters;
 use thiserror::Error;
 
 use crate::BridgeValidationConfig;
@@ -21,6 +25,39 @@ pub struct BehaviourMapping {
 pub struct MappingTables {
     pub class_to_cot: BTreeMap<String, String>,
     pub behaviour_to_detail: BTreeMap<String, BehaviourMapping>,
+}
+
+#[cfg(feature = "geo")]
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeoProximityPolicy {
+    pub near_threshold_meters: f64,
+    pub near_override_cot_type: String,
+}
+
+#[cfg(feature = "geo")]
+impl GeoProximityPolicy {
+    fn validate(&self) -> Result<(), GeoMappingError> {
+        if !self.near_threshold_meters.is_finite() || self.near_threshold_meters < 0.0 {
+            return Err(GeoMappingError::InvalidNearThresholdMeters {
+                threshold: self.near_threshold_meters,
+            });
+        }
+        if self.near_override_cot_type.trim().is_empty() {
+            return Err(GeoMappingError::EmptyNearOverrideCotType);
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "geo")]
+#[derive(Debug, Error, PartialEq)]
+pub enum GeoMappingError {
+    #[error("near_threshold_meters must be finite and >= 0.0, got {threshold}")]
+    InvalidNearThresholdMeters { threshold: f64 },
+
+    #[error("near_override_cot_type must not be empty")]
+    EmptyNearOverrideCotType,
 }
 
 impl MappingTables {
@@ -82,6 +119,26 @@ impl MappingTables {
             .map(String::as_str)
             .unwrap_or(fallback)
     }
+
+    #[cfg(feature = "geo")]
+    pub fn map_classification_with_proximity(
+        &self,
+        classification: &str,
+        fallback: &str,
+        source: &Position,
+        anchor: &Position,
+        policy: &GeoProximityPolicy,
+    ) -> Result<String, GeoMappingError> {
+        policy.validate()?;
+
+        let mapped = self.map_classification(classification, fallback);
+        let distance = haversine_distance_meters(source, anchor);
+        if distance <= policy.near_threshold_meters {
+            return Ok(policy.near_override_cot_type.clone());
+        }
+
+        Ok(mapped.to_owned())
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -120,6 +177,10 @@ mod tests {
         BehaviourMapping, BridgeValidationConfig, MappingSeverity, MappingTables,
         MappingValidationError,
     };
+    #[cfg(feature = "geo")]
+    use crate::{GeoMappingError, GeoProximityPolicy};
+    #[cfg(feature = "geo")]
+    use rustak_core::Position;
 
     fn strict_policy() -> BridgeValidationConfig {
         BridgeValidationConfig {
@@ -238,5 +299,77 @@ mod tests {
             .validate_with_policy(&strict_policy())
             .expect_err("strict startup should reject empty classification keys");
         assert_eq!(error, MappingValidationError::EmptyClassificationKey);
+    }
+
+    #[cfg(feature = "geo")]
+    #[test]
+    fn proximity_mapping_uses_near_override_inside_threshold() {
+        let tables = valid_tables();
+        let source = Position::new(34.0, -117.0).expect("source");
+        let anchor = Position::new(34.0, -116.999).expect("anchor");
+        let policy = GeoProximityPolicy {
+            near_threshold_meters: 150.0,
+            near_override_cot_type: "a-f-G-U-C".to_owned(),
+        };
+
+        let mapped = tables
+            .map_classification_with_proximity(
+                "UAS/Multirotor",
+                "a-u-A-M-F-Q",
+                &source,
+                &anchor,
+                &policy,
+            )
+            .expect("mapping should succeed");
+        assert_eq!(mapped, "a-f-G-U-C");
+    }
+
+    #[cfg(feature = "geo")]
+    #[test]
+    fn proximity_mapping_keeps_standard_mapping_outside_threshold() {
+        let tables = valid_tables();
+        let source = Position::new(34.0, -117.0).expect("source");
+        let anchor = Position::new(34.0, -116.9).expect("anchor");
+        let policy = GeoProximityPolicy {
+            near_threshold_meters: 500.0,
+            near_override_cot_type: "a-f-G-U-C".to_owned(),
+        };
+
+        let mapped = tables
+            .map_classification_with_proximity(
+                "UAS/Multirotor",
+                "a-u-A-M-F-Q",
+                &source,
+                &anchor,
+                &policy,
+            )
+            .expect("mapping should succeed");
+        assert_eq!(mapped, "a-h-A-M-F-Q");
+    }
+
+    #[cfg(feature = "geo")]
+    #[test]
+    fn proximity_mapping_rejects_invalid_threshold() {
+        let tables = valid_tables();
+        let source = Position::new(34.0, -117.0).expect("source");
+        let anchor = Position::new(34.0, -117.0).expect("anchor");
+        let policy = GeoProximityPolicy {
+            near_threshold_meters: -1.0,
+            near_override_cot_type: "a-f-G-U-C".to_owned(),
+        };
+
+        let error = tables
+            .map_classification_with_proximity(
+                "UAS/Multirotor",
+                "a-u-A-M-F-Q",
+                &source,
+                &anchor,
+                &policy,
+            )
+            .expect_err("invalid threshold must fail");
+        assert_eq!(
+            error,
+            GeoMappingError::InvalidNearThresholdMeters { threshold: -1.0 }
+        );
     }
 }
