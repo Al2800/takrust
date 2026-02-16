@@ -1,0 +1,101 @@
+name: quality-gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    name: xtask-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run xtask ci
+        run: cargo run -p xtask -- ci
+
+  nextest:
+    name: nextest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      - name: Run nextest
+        run: cargo nextest run --workspace --all-features
+
+  coverage:
+    name: llvm-cov
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Run llvm-cov
+        run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+
+  semver:
+    name: semver-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
+      - name: Run semver checks when baseline and libs exist
+        shell: bash
+        run: |
+          if ! cargo metadata --no-deps --format-version 1 | grep -q '"kind":\["lib"\]'; then
+            echo "No library targets in workspace; skipping semver checks."
+            exit 0
+          fi
+
+          if ! git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            echo "No baseline commit available; skipping semver checks."
+            exit 0
+          fi
+
+          cargo semver-checks check-release --workspace --all-features --baseline-rev HEAD^
+
+  msrv:
+    name: msrv-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.82.0
+      - name: Verify MSRV build
+        run: cargo check --workspace --all-targets --all-features
+
+  security:
+    name: security-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny,cargo-audit
+      - name: Run cargo-deny
+        run: cargo deny check all
+      - name: Run cargo-audit
+        run: cargo audit
+

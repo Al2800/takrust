@@ -1,0 +1,11 @@
+[workspace]
+members = ["xtask"]
+default-members = ["xtask"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.82"
+
+[workspace.metadata.ci]
+msrv = "1.82.0"
